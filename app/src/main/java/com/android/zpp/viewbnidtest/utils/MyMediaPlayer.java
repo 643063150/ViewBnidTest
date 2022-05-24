@@ -3,8 +3,11 @@ package com.android.zpp.viewbnidtest.utils;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
+import android.system.ErrnoException;
 import android.text.TextUtils;
+
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+
 import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -26,7 +29,7 @@ public class MyMediaPlayer {
     public static Context context;
     private MediaPlayer mediaPlayer;
     private MyMediaPlayerListener myMediaPlayerListener;
-    ScheduledExecutorService scheduledExecutorService ;
+    ScheduledExecutorService scheduledExecutorService;
 
     public static MyMediaPlayer newCreate(Context context) {
         myMediaPlayer = new MyMediaPlayer();
@@ -70,6 +73,11 @@ public class MyMediaPlayer {
             myMediaPlayerListener.onBufferingUpdate(percent);
         });
         mediaPlayer.setOnCompletionListener(mp -> myMediaPlayerListener.onFinish());
+        mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+            mp.reset();
+            myMediaPlayerListener.onError(new MyException("初始化失败,错误码:" + what));
+            return false;
+        });
     }
 
     /**
@@ -91,7 +99,7 @@ public class MyMediaPlayer {
                 myMediaPlayerListener.onPlayStatus(1);
             }
             myMediaPlayerListener.onInPress(mediaPlayer.getDuration(), mediaPlayer.getCurrentPosition());
-        }, 0,1, TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     public MyMediaPlayer setMyMediaPlayerListener(MyMediaPlayerListener myMediaPlayerListener) {
